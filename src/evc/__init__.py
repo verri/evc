@@ -1,5 +1,6 @@
 import numpy as np
 import scipy
+import matplotlib.pyplot as plt
 
 class BayesianEvaluation:
 
@@ -38,3 +39,29 @@ class BayesianEvaluation:
         pbetter = 1 - cdf(self.rope)
 
         return pbetter, pequiv, pworse
+
+
+    def plot(self, score):
+
+        nu, mu, tau2 = self.calculate_parameters(score)
+
+        pdf = lambda x: scipy.stats.t.pdf(x, df=nu, loc=mu, scale=np.sqrt(tau2))
+
+        # Plot a violin plot of the distribution with PDF `pdf` painting with
+        # red the portion that is lower than -self.rope, in yellow the portion
+        # between -self.rope and self.rope, and in green the portion that is
+        # higher than self.rope.
+
+        minx = (score - self.baseline_score).min()
+        maxx = (score - self.baseline_score).max()
+
+        x = np.linspace(minx, maxx, 1000)
+        y = pdf(x)
+
+        plt.plot(x, y, color='black')
+
+        plt.fill_between(x, y, where=x < -self.rope, color='red')
+        plt.fill_between(x, y, where=(x >= -self.rope) & (x <= self.rope), color='yellow')
+        plt.fill_between(x, y, where=x > self.rope, color='green')
+
+        plt.show()
