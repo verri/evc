@@ -8,8 +8,9 @@ class BayesianEvaluation:
     def __init__(self, baseline_score: np.ndarray, replications: int = 10, rope: float = 0):
 
         self.baseline_score = baseline_score
-        self.n = self.base_score.size
+        self.n = self.baseline_score.size
         self.rho = 1 / (self.n // replications)
+        self.rope = rope
 
 
     def calculate_parameters(self, score: np.ndarray):
