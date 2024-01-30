@@ -25,7 +25,7 @@ iris = load_iris()
 # Create baseline pipeline
 
 baseline = Pipeline([
-    ('dt', DecisionTreeClassifier(max_depth=3, random_state=0))
+    ('dt', DecisionTreeClassifier(max_depth=2, random_state=0))
 ])
 
 competitors = [
@@ -39,7 +39,7 @@ competitors = [
         ('nb', GaussianNB())
     ])),
     ('rf', Pipeline([
-        ('rf', RandomForestClassifier(n_estimators=20, random_state=0))
+        ('rf', RandomForestClassifier(n_estimators=10, random_state=0))
     ]))
 ]
 

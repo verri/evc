@@ -26,12 +26,20 @@ class BayesianEvaluation:
         return nu, mu, tau2
 
 
-    def calculate_bounds(self, score: np.ndarray):
+    def calculate_bounds(self, score: np.ndarray, delta: float = 0.01):
 
         nu, mu, tau2 = self.calculate_parameters(score)
         ppf = lambda x: scipy.stats.t.ppf(x, df=nu, loc=mu, scale=np.sqrt(tau2))
 
-        return ppf(0.05), ppf(0.95)
+        return ppf(delta), ppf(1-delta)
+
+
+    def calculate_peak(self, score: np.ndarray):
+
+        nu, mu, tau2 = self.calculate_parameters(score)
+        pdf = lambda x: scipy.stats.t.pdf(x, df=nu, loc=mu, scale=np.sqrt(tau2))
+
+        return pdf(mu)
 
 
     def evaluate(self, score):
@@ -51,7 +59,7 @@ class BayesianEvaluation:
         return pbetter, pequiv, pworse
 
 
-    def plot_at(self, score, ax, name, minx=None, maxx=None):
+    def plot_at(self, score, ax, name, minx=None, maxx=None, maxy=None):
 
         nu, mu, tau2 = self.calculate_parameters(score)
 
@@ -59,7 +67,7 @@ class BayesianEvaluation:
 
         # Plot a violin plot of the distribution with PDF `pdf` painting with
         # red the portion that is lower than -self.rope, in yellow the portion
-        # between -self.rope and self.rope, and in green the portion that is
+        # between -self.rope and self.rope, and in blue the portion that is
         # higher than self.rope.
 
         if minx is None:
@@ -74,8 +82,12 @@ class BayesianEvaluation:
         ax.set_title(name)
         ax.plot(x, y, color='black')
 
+        if maxy is not None:
+            # Set the maximum y value to maxy.
+            ax.set_ylim(top=maxy)
+
         # Load roma pallette from cmcrameri.
-        # The first color is red, the second is yellow, the third is green.
+        # The first color is red, the second is yellow, the third is blue.
 
         c1, c2, c3 = cm.roma((0.1, 0.4, 0.8))
 
@@ -86,12 +98,13 @@ class BayesianEvaluation:
         # Write the probabilities in the plot.
         pbetter, pequiv, pworse = self.evaluate(score)
 
-        ax.text(0.05, 0.95, f'P({name} > baseline) = {100 * pbetter:.0f}%', transform=ax.transAxes)
-        ax.text(0.05, 0.90, f'P({name} = baseline) = {100 * pequiv:.0f}%', transform=ax.transAxes)
-        ax.text(0.05, 0.85, f'P({name} < baseline) = {100 * pworse:.0f}%', transform=ax.transAxes)
+        bbox = dict(facecolor='white', alpha=0.8)
+
+        ax.text((-self.rope + minx) / 2, pdf((-self.rope + minx) / 2), f'{100 * pworse:.0f}%', bbox=bbox)
+        ax.text(0, pdf(0), f'{100 * pequiv:.0f}%', bbox=bbox)
+        ax.text((self.rope + maxx) / 2, pdf((self.rope + maxx) / 2), f'{100 * pbetter:.0f}%', bbox=bbox)
 
         # Draw a dashed vertical line at mu.
-
         ax.axvline(mu, color='black', linestyle='dashed')
 
 
@@ -102,9 +115,10 @@ class BayesianEvaluation:
 
         minx = min([self.calculate_bounds(score)[0] for name, score in scores])
         maxx = max([self.calculate_bounds(score)[1] for name, score in scores])
+        maxy = max([self.calculate_peak(score) for name, score in scores])
 
         for i, (name, score) in enumerate(scores):
             ax = axes.flatten()[i]
-            self.plot_at(score, ax, name, minx=minx, maxx=maxx)
+            self.plot_at(score, ax, name, minx=minx, maxx=maxx, maxy=maxy + 1)
 
         plt.show()
