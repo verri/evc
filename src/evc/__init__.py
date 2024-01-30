@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+from cmcrameri import cm
 
 class BayesianEvaluation:
 
@@ -25,6 +26,14 @@ class BayesianEvaluation:
         return nu, mu, tau2
 
 
+    def calculate_bounds(self, score: np.ndarray):
+
+        nu, mu, tau2 = self.calculate_parameters(score)
+        ppf = lambda x: scipy.stats.t.ppf(x, df=nu, loc=mu, scale=np.sqrt(tau2))
+
+        return ppf(0.05), ppf(0.95)
+
+
     def evaluate(self, score):
 
         nu, mu, tau2 = self.calculate_parameters(score)
@@ -42,7 +51,7 @@ class BayesianEvaluation:
         return pbetter, pequiv, pworse
 
 
-    def plot(self, score):
+    def plot_at(self, score, ax, name, minx=None, maxx=None):
 
         nu, mu, tau2 = self.calculate_parameters(score)
 
@@ -53,16 +62,49 @@ class BayesianEvaluation:
         # between -self.rope and self.rope, and in green the portion that is
         # higher than self.rope.
 
-        minx = (score - self.baseline_score).min()
-        maxx = (score - self.baseline_score).max()
+        if minx is None:
+            minx = (score - self.baseline_score).min()
+
+        if maxx is None:
+            maxx = (score - self.baseline_score).max()
 
         x = np.linspace(minx, maxx, 1000)
         y = pdf(x)
 
-        plt.plot(x, y, color='black')
+        ax.set_title(name)
+        ax.plot(x, y, color='black')
 
-        plt.fill_between(x, y, where=x < -self.rope, color='red')
-        plt.fill_between(x, y, where=(x >= -self.rope) & (x <= self.rope), color='yellow')
-        plt.fill_between(x, y, where=x > self.rope, color='green')
+        # Load roma pallette from cmcrameri.
+        # The first color is red, the second is yellow, the third is green.
+
+        c1, c2, c3 = cm.roma((0.1, 0.4, 0.8))
+
+        ax.fill_between(x, y, where=x < -self.rope, color=c1)
+        ax.fill_between(x, y, where=(x >= -self.rope) & (x <= self.rope), color=c2)
+        ax.fill_between(x, y, where=x > self.rope, color=c3)
+
+        # Write the probabilities in the plot.
+        pbetter, pequiv, pworse = self.evaluate(score)
+
+        ax.text(0.05, 0.95, f'P({name} > baseline) = {100 * pbetter:.0f}%', transform=ax.transAxes)
+        ax.text(0.05, 0.90, f'P({name} = baseline) = {100 * pequiv:.0f}%', transform=ax.transAxes)
+        ax.text(0.05, 0.85, f'P({name} < baseline) = {100 * pworse:.0f}%', transform=ax.transAxes)
+
+        # Draw a dashed vertical line at mu.
+
+        ax.axvline(mu, color='black', linestyle='dashed')
+
+
+    def plot(self, scores):
+
+        n = len(scores)
+        fig, axes = plt.subplots(nrows=n, ncols=1, figsize=(5, n * 5))
+
+        minx = min([self.calculate_bounds(score)[0] for name, score in scores])
+        maxx = max([self.calculate_bounds(score)[1] for name, score in scores])
+
+        for i, (name, score) in enumerate(scores):
+            ax = axes.flatten()[i]
+            self.plot_at(score, ax, name, minx=minx, maxx=maxx)
 
         plt.show()
