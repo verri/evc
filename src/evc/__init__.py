@@ -80,38 +80,38 @@ class BayesianEvaluation:
         y = pdf(x)
 
         ax.set_title(name)
-        ax.plot(x, y, color='black')
+        ax.plot(y, x, color='black')
 
         if maxy is not None:
             # Set the maximum y value to maxy.
-            ax.set_ylim(top=maxy)
+            ax.set_xlim(right=maxy)
 
         # Load roma pallette from cmcrameri.
         # The first color is red, the second is yellow, the third is blue.
 
         c1, c2, c3 = cm.roma((0.1, 0.4, 0.8))
 
-        ax.fill_between(x, y, where=x < -self.rope, color=c1)
-        ax.fill_between(x, y, where=(x >= -self.rope) & (x <= self.rope), color=c2)
-        ax.fill_between(x, y, where=x > self.rope, color=c3)
+        ax.fill_betweenx(x, y, where=x < -self.rope, color=c1)
+        ax.fill_betweenx(x, y, where=(x >= -self.rope) & (x <= self.rope), color=c2)
+        ax.fill_betweenx(x, y, where=x > self.rope, color=c3)
 
         # Write the probabilities in the plot.
         pbetter, pequiv, pworse = self.evaluate(score)
 
         bbox = dict(facecolor='white', alpha=0.8)
 
-        ax.text((-self.rope + minx) / 2, pdf((-self.rope + minx) / 2), f'{100 * pworse:.0f}%', bbox=bbox)
-        ax.text(0, pdf(0), f'{100 * pequiv:.0f}%', bbox=bbox)
-        ax.text((self.rope + maxx) / 2, pdf((self.rope + maxx) / 2), f'{100 * pbetter:.0f}%', bbox=bbox)
+        ax.text(pdf((-self.rope + minx) / 2), (-self.rope + minx) / 2, f'{100 * pworse:.0f}%', bbox=bbox)
+        ax.text(pdf(0), 0, f'{100 * pequiv:.0f}%', bbox=bbox)
+        ax.text(pdf((self.rope + maxx) / 2), (self.rope + maxx) / 2, f'{100 * pbetter:.0f}%', bbox=bbox)
 
         # Draw a dashed vertical line at mu.
-        ax.axvline(mu, color='black', linestyle='dashed')
+        ax.axhline(mu, color='black', linestyle='dashed')
 
 
     def plot(self, scores):
 
         n = len(scores)
-        fig, axes = plt.subplots(nrows=n, ncols=1, figsize=(5, n * 5))
+        fig, axes = plt.subplots(nrows=1, ncols=n, figsize=(n * 5, 5))
 
         minx = min([self.calculate_bounds(score)[0] for name, score in scores])
         maxx = max([self.calculate_bounds(score)[1] for name, score in scores])
