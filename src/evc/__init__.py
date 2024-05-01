@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 from cmcrameri import cm
 
 class BayesianEvaluation:
-
-
+    """ Bayesian evaluation of the difference between two scores. """
+    
     def __init__(self, baseline_score: np.ndarray, replications: int = 10, rope: float = 0):
 
         self.baseline_score = baseline_score
