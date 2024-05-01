@@ -10,8 +10,8 @@ class BayesianEvaluation:
 
         self.baseline_score = baseline_score
         self.n = self.baseline_score.size
-        self.rho = 1 / (self.n // replications)
-        self.rope = rope
+        self.rho = 1 / (self.n // replications) # Correlation heuristic for repeated measures.
+        self.rope = rope # Region of practical equivalence.
 
 
     def calculate_parameters(self, score: np.ndarray):
@@ -21,7 +21,7 @@ class BayesianEvaluation:
 
         nu = self.n - 1
         mu = x.mean()
-        tau2 = (1 / self.n + self.rho / (1 - self.rho)) * x.var(ddof=1)
+        tau2 = (1 / self.n + self.rho / (1 - self.rho)) * x.var(ddof=1)  
 
         return nu, mu, tau2
 
