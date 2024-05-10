@@ -43,14 +43,12 @@ n_repeats = 2
 
 def cross_validate_model(model, X, y, n_splits, n_repeats):
     scores = np.array([])
-    kf = KFold(n_splits=n_splits, shuffle=True, random_state=None)
     label_binarizer = LabelBinarizer()
     y_encoded = label_binarizer.fit_transform(y)
 
     for i in range(n_repeats):
-        print(f"Repeat: {i+1}")
-        for fold, (train_index, test_index) in enumerate(kf.split(X)):
-            print(f" - Fold {fold+1}")
+        kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=i) # Seed ensures i realize paired folds for each classifier
+        for (train_index, test_index) in kf.split(X, y):
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y_encoded[train_index], y[test_index]
 
@@ -61,7 +59,6 @@ def cross_validate_model(model, X, y, n_splits, n_repeats):
             predicted_classes = np.argmax(predictions, axis=1)
             accuracy = accuracy_score(y_test, predicted_classes)
             scores = np.append(scores, accuracy)
-            print(f"   - Accuracy: {accuracy}")
     return scores
 
 baseline_score = cross_validate_model(baseline, iris.data, iris.target, n_splits, n_repeats)
