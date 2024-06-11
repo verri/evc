@@ -27,6 +27,26 @@ def meta(args):
 
         with open('.meta/data.json', 'w') as f:
             json.dump(jsondata, f, indent=2)
+    elif args.target == 'sampling':
+        from data import Dataset
+        dataset = Dataset()
+        X, y = dataset.load()
+
+        from sampling import Sampling
+        sampling = Sampling()
+
+        splits = sampling.split(X, y)
+
+        jsondata = {
+            'splits': splits,
+        }
+
+        with open('.meta/sampling.json', 'w') as f:
+            json.dump(jsondata, f, indent=2)
+
+    else:
+        print('Metadata generation for "{}" is not implemented'.format(args.target))
+        raise NotImplementedError
 
 def main():
     parser = argparse.ArgumentParser()
