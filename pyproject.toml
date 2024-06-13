@@ -16,7 +16,8 @@ dependencies = [
   "scipy",
   "matplotlib",
   "cmcrameri",
-  "pandas"
+  "pandas",
+  "GitPython"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
