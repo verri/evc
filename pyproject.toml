@@ -15,7 +15,8 @@ dependencies = [
   "numpy >= 1.21",
   "scipy",
   "matplotlib",
-  "cmcrameri"
+  "cmcrameri",
+  "pandas"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
