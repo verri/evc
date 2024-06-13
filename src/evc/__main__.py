@@ -6,6 +6,7 @@ import json
 import pandas as pd
 from git import Repo
 import tempfile
+from evc import BayesianEvaluation
 
 metamk_contents = """
 DATA_FILES = $(shell find ./data -type f)
@@ -174,6 +175,46 @@ def evaluate(args):
     head_commit_hash = repo.head.commit.hexsha
     pd.DataFrame(results).to_csv(f'.cache/evaluation/{head_commit_hash}.csv', index=False)
 
+def compare(args):
+
+    # First check if all commits are valid
+    repo = Repo('.')
+    for commit in args.commits + [args.base]:
+        try:
+            repo.commit(commit)
+        except:
+            print(f'Commit "{commit}" is not valid.')
+            raise RuntimeError
+
+    # TODO: check if metadata for all commits are compatible
+
+    # Load evaluation results
+    results = {}
+    for commit in args.commits + [args.base]:
+        # Checkout to commit
+        repo.git.checkout(commit)
+        commit_hash = repo.head.commit.hexsha
+
+        if not os.path.exists(f'.cache/evaluation/{commit_hash}.csv'):
+            print(f'Evaluating commit "{commit}"...')
+            # TODO: if it is dirty, should we deal with it?
+            evaluate(args)
+
+        # TODO: in the future, sort by id if evaluation is run in parallel
+        # (which can change the order of the results)
+        results[commit] = pd.read_csv(f'.cache/evaluation/{commit_hash}.csv')['scores']
+
+    # Compare results
+    baseline_score = results[args.base]
+    competitors_score = [ (commit, results[commit]) for commit in args.commits ]
+
+    # TODO: use rho from sampling metadata
+    # TODO: use model name from model metadata
+
+    be = BayesianEvaluation(baseline_score, rope=0)
+    be.plot(competitors_score)
+
+
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(required=True)
@@ -195,6 +236,14 @@ def main():
     evaluate_parser = subparsers.add_parser('evaluate',
             help='Evaluate the model')
     evaluate_parser.set_defaults(func=evaluate)
+
+    # 'compare' subcommand
+    compare_parser = subparsers.add_parser('compare',
+            help='Compare the evaluation results')
+    compare_parser.set_defaults(func=compare)
+    compare_parser.add_argument('--base', help='Base commit hash',
+            required=True)
+    compare_parser.add_argument('commits', nargs='+')
 
     args = parser.parse_args()
     args.func(args)
