@@ -8,10 +8,10 @@ from git import Repo
 import tempfile
 
 metamk_contents = """
-DATA_FILES = $(shell find src/data -type f)
-SAMPLING_FILES = $(shell find src/sampling -type f)
-EVALUATION_FILES = $(shell find src/evaluation -type f)
-MODEL_FILES = $(shell find src/model -type f)
+DATA_FILES = $(shell find ./data -type f)
+SAMPLING_FILES = $(shell find ./sampling -type f)
+EVALUATION_FILES = $(shell find ./evaluation -type f)
+MODEL_FILES = $(shell find ./model -type f)
 
 all: .meta/data.json .meta/sampling.json .meta/evaluation.json .meta/model.json
 
@@ -119,9 +119,19 @@ def meta(args):
 
 def evaluate(args):
 
-    # TODO: we should check if the metadata is up-to-date before running the
-    # evaluation.  Also, we must check whether all changes are committed to the
-    # repository.
+    # call update to ensure metadata is up-to-date
+    # if the update operation modifies the metadata, the evaluation will be
+    # will not run because the repository becomes dirty.
+    update(args)
+
+    repo = Repo('.')
+    if repo.bare:
+        print('This script must be run inside a Git repository.')
+        raise RuntimeError
+
+    if repo.is_dirty():
+        print('This script must be run in a clean Git repository.  Please commit or stash your changes.')
+        raise RuntimeError
 
     from data import Dataset
     dataset = Dataset()
@@ -160,9 +170,6 @@ def evaluate(args):
 
     os.makedirs('.cache', exist_ok=True)
     os.makedirs('.cache/evaluation', exist_ok=True)
-
-    repo = Repo('.')
-    assert not repo.bare
 
     head_commit_hash = repo.head.commit.hexsha
     pd.DataFrame(results).to_csv(f'.cache/evaluation/{head_commit_hash}.csv', index=False)
