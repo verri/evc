@@ -7,7 +7,8 @@ class Model:
     version = 0.1
 
     def __init__(self, max_depth=3):
-        self.model = DecisionTreeClassifier(max_depth=max_depth)
+        self.model = DecisionTreeClassifier(max_depth=max_depth,
+                random_state=42)
 
     def fit(self, X, y):
         self.model.fit(X, y)

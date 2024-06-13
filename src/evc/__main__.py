@@ -3,6 +3,7 @@ import os
 import hashlib
 import numpy
 import json
+import pandas as pd
 
 def update(args):
     print('Updating metadata...')
@@ -83,6 +84,46 @@ def meta(args):
         print('Metadata generation for "{}" is not implemented'.format(args.target))
         raise NotImplementedError
 
+def evaluate(args):
+
+    from data import Dataset
+    dataset = Dataset()
+    X, y = dataset.load()
+
+    from model import Model
+    model = Model()
+
+    from sampling import Sampling
+    sampling = Sampling()
+
+    from evaluation import Evaluation
+    evaluation = Evaluation()
+
+    splits = sampling.split(X, y)
+
+    results = {
+        'id': [],
+        'scores': [],
+    }
+
+    for i, split in enumerate(splits):
+        train_idx = split['train']
+        test_idx = split['test']
+
+        X_train, y_train = X[train_idx], y[train_idx]
+        X_test, y_test = X[test_idx], y[test_idx]
+
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+
+        score = evaluation.evaluate(y_test, y_pred)
+
+        results['id'].append(i)
+        results['scores'].append(score)
+
+    os.makedirs('.cache', exist_ok=True)
+    pd.DataFrame(results).to_csv('.cache/evaluation.csv', index=False)
+
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(required=True)
@@ -99,6 +140,11 @@ def main():
             choices=['data', 'model', 'sampling', 'evaluation'],
             required=True)
     meta_parser.set_defaults(func=meta)
+
+    # 'evaluate' subcommand
+    evaluate_parser = subparsers.add_parser('evaluate',
+            help='Evaluate the model')
+    evaluate_parser.set_defaults(func=evaluate)
 
     args = parser.parse_args()
     args.func(args)
