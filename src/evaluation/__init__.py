@@ -1,5 +1,8 @@
 class Evaluation:
 
+    name = 'accuracy'
+    version = '0.1'
+
     def __init__(self):
         pass
 

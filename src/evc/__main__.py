@@ -46,6 +46,25 @@ def meta(args):
         with open('.meta/sampling.json', 'w') as f:
             json.dump(jsondata, f, indent=2)
 
+    elif args.target == 'evaluation':
+        from evaluation import Evaluation
+        evaluation = Evaluation()
+
+        # XXX: here we have a major limitation: how can we track if the
+        # evaluation function is changed?  We could use the source code hash,
+        # but I am unsure if this is enough.  Let's rely on the user to update
+        # the name if the evaluation function is changed.
+        # Another approach is to use a Git Hook that checks for changes inside
+        # the evaluation/ directory.  If there is a change, the user must
+        # explicitly update the version metadata.
+        jsondata = {
+            'name': Evaluation.name,
+            'version': Evaluation.version,
+        }
+
+        with open('.meta/evaluation.json', 'w') as f:
+            json.dump(jsondata, f, indent=2)
+
     else:
         print('Metadata generation for "{}" is not implemented'.format(args.target))
         raise NotImplementedError
