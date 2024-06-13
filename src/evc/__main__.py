@@ -27,6 +27,7 @@ def meta(args):
 
         with open('.meta/data.json', 'w') as f:
             json.dump(jsondata, f, indent=2)
+
     elif args.target == 'sampling':
         from data import Dataset
         dataset = Dataset()
@@ -39,6 +40,7 @@ def meta(args):
 
         jsondata = {
             'splits': splits,
+            'rho': sampling.correction_factor(),
         }
 
         with open('.meta/sampling.json', 'w') as f:

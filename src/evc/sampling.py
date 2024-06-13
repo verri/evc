@@ -16,3 +16,8 @@ class RepeatedKFold:
                 result = { "train": train.tolist(), "test": test.tolist() }
                 splits.append(result)
         return splits
+
+    def correction_factor(self):
+        """Correlation between test sets.  The same thing as the $\rho$ parameter.
+        in the paper."""
+        return 1 / self.n_repeats # TODO check vs. 1 / self.n_splits

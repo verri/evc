@@ -10,4 +10,3 @@ class Sampling(RepeatedKFold):
 
     def __init__(self):
         super().__init__(n_repeats=10, n_splits=10, stratified=True)
-
