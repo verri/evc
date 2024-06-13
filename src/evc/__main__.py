@@ -4,6 +4,7 @@ import hashlib
 import numpy
 import json
 import pandas as pd
+from git import Repo
 
 def update(args):
     print('Updating metadata...')
@@ -86,6 +87,10 @@ def meta(args):
 
 def evaluate(args):
 
+    # TODO: we should check if the metadata is up-to-date before running the
+    # evaluation.  Also, we must check whether all changes are committed to the
+    # repository.
+
     from data import Dataset
     dataset = Dataset()
     X, y = dataset.load()
@@ -122,7 +127,13 @@ def evaluate(args):
         results['scores'].append(score)
 
     os.makedirs('.cache', exist_ok=True)
-    pd.DataFrame(results).to_csv('.cache/evaluation.csv', index=False)
+    os.makedirs('.cache/evaluation', exist_ok=True)
+
+    repo = Repo('.')
+    assert not repo.bare
+
+    head_commit_hash = repo.head.commit.hexsha
+    pd.DataFrame(results).to_csv(f'.cache/evaluation/{head_commit_hash}.csv', index=False)
 
 def main():
     parser = argparse.ArgumentParser()
