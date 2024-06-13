@@ -1,4 +1,4 @@
-from sklearn.decision_tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 class Model:
     """Model class for Decision Tree."""
@@ -14,4 +14,3 @@ class Model:
 
     def predict(self, X):
         return self.model.predict(X)
-

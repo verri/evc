@@ -65,6 +65,20 @@ def meta(args):
         with open('.meta/evaluation.json', 'w') as f:
             json.dump(jsondata, f, indent=2)
 
+    elif args.target == 'model':
+        from model import Model
+        model = Model()
+
+        # XXX: here we have a similar limitation as the evaluation metadata.
+        jsondata = {
+            'name': Model.name,
+            'version': Model.version,
+            'description': Model.__doc__,
+        }
+
+        with open('.meta/model.json', 'w') as f:
+            json.dump(jsondata, f, indent=2)
+
     else:
         print('Metadata generation for "{}" is not implemented'.format(args.target))
         raise NotImplementedError
