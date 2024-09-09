@@ -109,8 +109,10 @@ class BayesianEvaluation:
 
 
     def plot(self, scores):
+        # TODO: it is not working with only one score.
 
         n = len(scores)
+        assert n > 1
         fig, axes = plt.subplots(nrows=1, ncols=n, figsize=(n * 5, 5))
 
         minx = min([self.calculate_bounds(score)[0] for name, score in scores])
